@@ -1,12 +1,18 @@
-#set -o xtrace 
 #!/usr/bin/env bash
+ set -o xtrace 
 # author: jeanluc.rakotovao@gmail.com | jean-luc.rakotovao@alterway.fr
 # example: arg1="${1:-}"
 
 #{{{ USAGE
 if [[ -z "$@" ]]
   then
-    echo "usage"
+    echo "usage :
+    $0 <-c|-d> <-p /some/dst/path/> [-r days_of_retention]                
+    -c  create dump             
+    -d  delete dump             
+    -p  dump destination path   
+    -r  days of retention       
+    "
     exit 0
 fi
 #}}} USAGE
@@ -26,8 +32,11 @@ fi
   # files 
   lock_file="/tmp/${__base}.lock"  
   
-  # optargs params 
+  # params 
   opt=$@ 
+
+  # date 
+  timestamp=$(date +%Y-%m-%d_%H-%M-%S)
 
   # bin substitution 
   mysql=$(which mysql) || (echo "[WARNING] mysql is not installed")
@@ -35,20 +44,6 @@ fi
   gzip=$(which gzip) || (echo "[WARNING] gzip is not installed")
   gunzip=$(which gunzip) || (echo "[WARNING] gunzip is not installed")
 #}}} INIT
-
-#{{{ LOCKFILE
-  ErrLock(){
-    echo "this process is already owned by $(cat $lock_file) with $lock_file"
-    exit 1
-  }
-  RmLock(){
-    rm -f $lock_file 
-  }
-  MkLock(){
-    set -o noclobber; echo "$$" > "$lock_file" 2> /dev/null || ErrLock
-    set +o noclobber
-  }
-#}}} LOCKFILE 
 
 #{{{ PARAMS
   while getopts ":cdp:" opt; do
@@ -74,18 +69,41 @@ fi
   done
 #}}} PARAMS
 
+#{{{ LOCKFILE
+  ErrLock(){
+    echo "this process is already owned by $(cat $lock_file) with $lock_file"
+    exit 1
+  }
+  RmLock(){
+    rm -f $lock_file 
+  }
+  MkLock(){
+    set -o noclobber; echo "$$" > "$lock_file" 2> /dev/null || ErrLock
+    set +o noclobber
+  }
+#}}} LOCKFILE 
+
 #{{{ METHODS
   MkDump(){
-    echo "function MkDump"
-    echo "-c was triggered, Parameter: $1" >&2
+  # execute the dump for each table 
+  for db in $($mysql --show-warnings="false" --execute="show databases" | egrep "[:alnum:-_]" | grep -v "Database"); do 
+    mkdir -p "${dump_path}/${timestamp}/${db}" || echo "The following directory already exists: ${dump_path}"
+    for table in $($mysql --execute="use ${db}; show tables" | egrep "[:alnum:-_]" | grep -v "Tables_in"); do
+      ${mysqldump} ${db} ${table} | ${gzip} > "${dump_path}/${timestamp}/${db}/${table}"
+    done  
+  done 
   }
-  RmDump(){
-    echo "function RmDump"
-    echo "-d was triggered, Parameter: $1" >&2
+  RollBack(){ 
+    # Roll-back on exit non 0 
+    rm -rf "${dump_path}/${timestamp}"; \
+    RmLock
   }
 #}}} METHODS
 
 #{{{ BODY
   # only one dump process
+  MkLock 
+  MkDump || RollBack
+  RmLock
   exit 0
 #}}} BODY
