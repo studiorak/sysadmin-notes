@@ -1,0 +1,5 @@
+vsftpd permit to easily chroot system users
+
+/!\ root path must be owned by root 
+/!\ subdirectories must be owned by user 
+/!\ vsftpd doesn't permit to write into the root dir

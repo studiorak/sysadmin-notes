@@ -1,0 +1,38 @@
+snpnode19:
+  - 10.0.2.29/24
+
+snpnode51:
+  - 10.0.2.55/24
+
+snpnode61:
+  - 10.0.2.61/24
+
+================== snpnode19 ========================
+
+#/etc/exports
+/home/capistrano/data/elastic-snapshot/ 10.0.2.55(rw,async,no_root_squash,no_subtree_check) 
+/home/capistrano/data/elastic-snapshot/ 10.0.2.61(rw,async,no_root_squash,no_subtree_check) 
+
+#/etc/fstab
+10.0.2.55:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode51
+10.0.2.61:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode61
+
+================== snpnode51 ========================
+
+#/etc/exports
+/home/capistrano/data/elastic-snapshot/ 10.0.2.29(rw,async,no_root_squash,no_subtree_check) 
+/home/capistrano/data/elastic-snapshot/ 10.0.2.61(rw,async,no_root_squash,no_subtree_check) 
+
+#/etc/fstab
+10.0.2.29:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode19
+10.0.2.61:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode61
+
+================== snpnode61 ========================
+
+#/etc/exports
+/home/capistrano/data/elastic-snapshot/ 10.0.2.29(rw,async,no_root_squash,no_subtree_check) 
+/home/capistrano/data/elastic-snapshot/ 10.0.2.55(rw,async,no_root_squash,no_subtree_check) 
+
+#/etc/fstab
+10.0.2.29:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode19
+10.0.2.61:/home/capistrano/data/elastic-snapshot/ /home/capistrano/data/elastic-snapshot/ nfs rw,bg,hard,nointr,rsize=32768,wsize=32768,vers=3,suid,tcp,timeo=600,_netdev      0       0   # snpnode51
