@@ -1,0 +1,753 @@
+CONSTRUIRE UN RAID 10 EN PARTANT D'UN RAID 1 ET 2 DD EN FOREIGN :
+=================================================================
+
+ON DEFONCE COMPLET LE RAID 1 PRESENT
+====================================
+
+megacli -CfgLdDel -L0 -Force -a0
+                                     
+Adapter 0: Deleted Virtual Drive-0(target id-0)
+
+NOTA: ds le bios de la carte les 2 dd concernés sont dorenavent vu en "Ready"
+
+on confirme avec megacli -pdinfo -PhysDrv[32:1] -a0
+
+
+Enclosure Device ID: 32
+Slot Number: 1
+Enclosure position: N/A
+Device Id: 1
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 279.396 GB [0x22ecb25c Sectors]
+Non Coerced Size: 278.896 GB [0x22dcb25c Sectors]
+Coerced Size: 278.875 GB [0x22dc0000 Sectors]
+Sector Size:  0
+Firmware state: Unconfigured(good), Spun Up				; Firmware state: Online, Spun Up avant 
+Device Firmware Level: YS07
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c500484eb269
+SAS Address(1): 0x0
+Connected Port Number: 1(path0) 
+Inquiry Data: SEAGATE ST9300653SS     YS076XN0GZ4W            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 							; mais tjs pas en foreign
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :33C (91.40 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+
+QUE FAIRE SI ON A DES DD EN "Foreign Bad" ?
+===========================================
+
+on a : 
+
+megacli -PdInfo -PhysDrv [32:5] -a0
+
+Enclosure Device ID: 32
+Slot Number: 5                     
+...
+Firmware state: Unconfigured(bad)
+...
+Foreign State: Foreign
+
+
+megacli -PDMakeGood -PhysDrv[32:5] -a0
+ 
+Adapter: 0: EnclId-32 SlotId-5 state changed to Unconfigured-Good.
+
+on aura tjs pratiquement que des "Firmware state: Unconfigured(good), Spun Up"
+
+
+ON DEFONCE LES "Foreign" MAINTENANT :
+=====================================
+
+on a au depart : 
+
+megacli -PdInfo -PhysDrv [32:3] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 3
+Enclosure position: N/A
+Device Id: 3
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 68.366 GB [0x88bb93a Sectors]
+Non Coerced Size: 67.866 GB [0x87bb93a Sectors]
+Coerced Size: 67.75 GB [0x8780000 Sectors]
+Sector Size:  0
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: D108
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x500000e0142e35b2
+SAS Address(1): 0x0
+Connected Port Number: 3(path0) 
+Inquiry Data: FUJITSU MAY2073RC       D108B363P7104FY1        
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: Foreign 							; boouuuuh le vilain !!!
+Foreign Secure: Drive is not secured by a foreign lock key
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :28C (82.40 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+
+on le poutre:
+
+megacli -CfgForeign -Clear -a0
+                                     
+Foreign configuration 0 is cleared on controller 0.
+
+on verifie : 
+
+ megacli -PdInfo -PhysDrv [32:3] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 3
+Enclosure position: N/A
+Device Id: 3
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 68.366 GB [0x88bb93a Sectors]
+Non Coerced Size: 67.866 GB [0x87bb93a Sectors]
+Coerced Size: 67.75 GB [0x8780000 Sectors]
+Sector Size:  0
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: D108
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x500000e0142e35b2
+SAS Address(1): 0x0
+Connected Port Number: 3(path0) 
+Inquiry Data: FUJITSU MAY2073RC       D108B363P7104FY1        
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 							; mieux non ?
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :28C (82.40 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+NOTA: ds le bios de la carte les 4 dd sont dorenavent vu en "Ready"
+
+CONSTRUCTION DU RAID 10 : 
+=========================
+
+megacli -CfgSpanAdd -r10 -Array0[32:0,32:1] Array1[32:2,32:3] WB RA Direct CachedBadBBU -a0
+
+première grappe = Array0 constituée de [32:0,32:1] 
+deuxieme grappe = Array1 constituée de [32:2,32:3] 
+
+Adapter 0: Created VD 0
+
+Adapter 0: Configured the Adapter!!
+
+on verifie : 
+
+megacli -LDGetNum -a0
+                                     
+ Number of Virtual Drives Configured on Adapter 0: 1
+
+ megacli -LDInfo -Lall -a0
+                                     
+
+Adapter 0 -- Virtual Drive Information:
+Virtual Drive: 0 (Target Id: 0)
+Name                :
+RAID Level          : Primary-1, Secondary-0, RAID Level Qualifier-0
+Size                : 135.5 GB
+Sector Size         : 512
+Mirror Data         : 135.5 GB
+State               : Optimal
+Strip Size          : 64 KB
+Number Of Drives per span:2
+Span Depth          : 2								; plop c'est bien un raid 10 , =1 pour raid 1
+Default Cache Policy: WriteBack, ReadAhead, Direct, Write Cache OK if Bad BBU
+Current Cache Policy: WriteBack, ReadAhead, Direct, Write Cache OK if Bad BBU
+Default Access Policy: Read/Write
+Current Access Policy: Read/Write
+Disk Cache Policy   : Disk's Default
+Encryption Type     : None
+Is VD Cached: No
+
+puis on initialise le vd :
+
+megacli -LDInit -Start -L0 -a0
+                                     
+Start Initialization on Virtual Drive 0 (target id: 0) Failed.
+
+FW error description: 
+  The requested virtual drive operation cannot be performed because consistency check is in progress.
+
+Que faire ? 
+
+normalement "megacli -LDCC -Stop -L0 -a0" suffit mais bug ou autre , ça marche pas.....=> soit : 
+
+megacli -AdpSetProp BgiRate 99 -a0
+                                     
+Adapter 0: Set BGI Rate to 99% success.						; fais aller + vite
+
+ou alors , redemarrer la machine , aller dans bios du raid et stopper à la main le consistency check......
+
+on re tente initialisation : 
+
+megacli -LDInit -Start -L0 -a0
+                                     
+Start Initialization on Virtual Drive 0 (target id: 0) Success.
+
+youpi !! 
+
+
+REMPLACEMENT D'UN DD HS SUR RAID 10 :
+=====================================
+
+etat de depart : => State               : Optimal
+
+poutrons un peu tout ça .....
+
+on passe le disque offline comme pour simuler sa perte :
+
+megacli -PDOffline -PhysDrv [32:2] -a0
+                                     
+Adapter: 0: EnclId-32 SlotId-2 state changed to OffLine.
+
+on verifie : 
+
+megacli -pdinfo -PhysDrv[32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Drive's position: DiskGroup: 0, Span: 1, Arm: 0
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 11
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 1
+Last Predictive Failure Event Seq Number: 14529
+PD Type: SAS
+
+Raw Size: 68.366 GB [0x88bb93a Sectors]
+Non Coerced Size: 67.866 GB [0x87bb93a Sectors]
+Coerced Size: 67.75 GB [0x8780000 Sectors]
+Sector Size:  0
+Firmware state: Offline
+Device Firmware Level: SM04
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c5000b0126a9
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST973451SS      SM043PD1NL1T            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :29C (84.20 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : Yes 
+
+plop, on met un nouveau dd , et on regarde un peu ce que ça dit :
+
+
+megacli -pdinfo -PhysDrv[32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 558.911 GB [0x45dd2fb0 Sectors]
+Non Coerced Size: 558.411 GB [0x45cd2fb0 Sectors]
+Coerced Size: 558.375 GB [0x45cc0000 Sectors]
+Sector Size:  0
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: FM07
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c500241775b5
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST9600204SS     FM073WN0B4P9            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: Foreign 
+Foreign Secure: Drive is not secured by a foreign lock key
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :31C (87.80 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+quoi ? on aurait un disque en foreign ?
+on verifie :
+
+megacli -CfgForeign -Scan -a0
+                                     
+There are 1 foreign configuration(s) on controller 0.
+
+On le passe en "Foreign none":
+
+megacli -CfgForeign -Clear -a0
+                                     
+Foreign configuration 0 is cleared on controller 0.
+
+on verifie que tout est ok : 
+
+megacli -CfgForeign -Scan -a0
+                                     
+There is no foreign configuration on controller 0.
+
+et 
+
+
+megacli -pdinfo -PhysDrv[32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 558.911 GB [0x45dd2fb0 Sectors]
+Non Coerced Size: 558.411 GB [0x45cd2fb0 Sectors]
+Coerced Size: 558.375 GB [0x45cc0000 Sectors]
+Sector Size:  0
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: FM07
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c500241775b5
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST9600204SS     FM073WN0B4P9            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :32C (89.60 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+!!! LA RECONSTRUCTION DU RAID NE SE FAIRA PAS AUTOMATIQUEMENT !!!
+!!!!!! POUR LA FORCER FAIRE !!!!!!
+
+megacli -PdReplaceMissing -physdrv[32:2] -array1 -row0 -a0
+                                     
+Adapter: 0: Missing PD at Array 1, Row 0 is replaced.
+
+puis : 
+
+megacli -pdinfo -PhysDrv[32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Drive's position: DiskGroup: 0, Span: 1, Arm: 0
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 2
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 558.911 GB [0x45dd2fb0 Sectors]
+Non Coerced Size: 558.411 GB [0x45cd2fb0 Sectors]
+Coerced Size: 558.375 GB [0x45cc0000 Sectors]
+Sector Size:  0
+Firmware state: Offline							; ah ah ......
+Device Firmware Level: FM07
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c500241775b5
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST9600204SS     FM073WN0B4P9            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :31C (87.80 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+et on force le rebuild.....
+
+megacli -pdrbld -Start -physdrv[32:2] -a0
+                                     
+Started rebuild progress on device(Encl-32 Slot-2)
+
+on verifie : 
+
+megacli -pdinfo -PhysDrv[32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Drive's position: DiskGroup: 0, Span: 1, Arm: 0
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 5
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 558.911 GB [0x45dd2fb0 Sectors]
+Non Coerced Size: 558.411 GB [0x45cd2fb0 Sectors]
+Coerced Size: 558.375 GB [0x45cc0000 Sectors]
+Sector Size:  0
+Firmware state: Rebuild
+Device Firmware Level: FM07
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c500241775b5
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST9600204SS     FM073WN0B4P9            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :31C (87.80 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+YOUPIIIIIII !!!!!!!!!!
+
+
+
+PASSER D'UN RAID 1 A UN RAID 5 AVEC 3 DD
+========================================
+
+On demarre avec : 
+
+megacli -LDInfo -Lall -a0
+                                     
+
+Adapter 0 -- Virtual Drive Information:
+Virtual Drive: 0 (Target Id: 0)
+Name                :
+RAID Level          : Primary-1, Secondary-0, RAID Level Qualifier-0
+Size                : 67.75 GB
+Mirror Data         : 67.75 GB
+State               : Optimal
+Strip Size          : 64 KB
+Number Of Drives    : 2
+Span Depth          : 1
+Default Cache Policy: WriteBack, ReadAheadNone, Direct, No Write Cache if Bad BBU
+Current Cache Policy: WriteBack, ReadAheadNone, Direct, No Write Cache if Bad BBU
+Default Access Policy: Read/Write
+Current Access Policy: Read/Write
+Disk Cache Policy   : Disk's Default
+Encryption Type     : None
+Is VD Cached: No
+
+On rajoute un DD ds le 3ème emplacement et on voit : 
+
+megacli -PdInfo -PhysDrv [32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 136.732 GB [0x11177328 Sectors]
+Non Coerced Size: 136.232 GB [0x11077328 Sectors]
+Coerced Size: 136.125 GB [0x11040000 Sectors]
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: HS0F
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c5001cd0910d
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST3146356SS     HS0F3QN30MP4            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: Foreign 
+Foreign Secure: Drive is not secured by a foreign lock key
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :25C (77.00 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+déjà , ne le voyons plus en foreign : 
+
+megacli -CfgForeign -Clear -a0
+                                     
+Foreign configuration 0 is cleared on controller 0.
+
+megacli -PdInfo -PhysDrv [32:2] -a0
+                                     
+Enclosure Device ID: 32
+Slot Number: 2
+Enclosure position: N/A
+Device Id: 2
+WWN: 
+Sequence Number: 1
+Media Error Count: 0
+Other Error Count: 0
+Predictive Failure Count: 0
+Last Predictive Failure Event Seq Number: 0
+PD Type: SAS
+
+Raw Size: 136.732 GB [0x11177328 Sectors]
+Non Coerced Size: 136.232 GB [0x11077328 Sectors]
+Coerced Size: 136.125 GB [0x11040000 Sectors]
+Firmware state: Unconfigured(good), Spun Up
+Device Firmware Level: HS0F
+Shield Counter: 0
+Successful diagnostics completion on :  N/A
+SAS Address(0): 0x5000c5001cd0910d
+SAS Address(1): 0x0
+Connected Port Number: 2(path0) 
+Inquiry Data: SEAGATE ST3146356SS     HS0F3QN30MP4            
+FDE Capable: Not Capable
+FDE Enable: Disable
+Secured: Unsecured
+Locked: Unlocked
+Needs EKM Attention: No
+Foreign State: None 
+Device Speed: Unknown 
+Link Speed: Unknown 
+Media Type: Hard Disk Device
+Drive Temperature :30C (86.00 F)
+PI Eligibility:  No 
+Drive is formatted for PI information:  No
+PI: No PI
+Port-0 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Port-1 :
+Port status: Active
+Port's Linkspeed: Unknown 
+Drive has flagged a S.M.A.R.T alert : No
+
+yapluka : 
+
+megacli -LDRecon -Start -r5 -Add -PhysDrv[32:2] -L0 -a0
+                                     
+Start Reconstruction of Virtual Drive Success.
+
+on verifie : 
+
+megacli -LDRecon -ShowProg -L0 -a0
+                                     
+Reconstruction on VD #0 (target id #0) Completed 7% in 2 Minutes.
+
+et : 
+
+megacli -ldinfo L0 -a0
+                                     
+
+Adapter 0 -- Virtual Drive Information:
+Virtual Drive: 0 (Target Id: 0)
+Name                :
+RAID Level          : Primary-1, Secondary-0, RAID Level Qualifier-0			; raid 5 pas encore pris en compte
+Size                : 67.75 GB
+Mirror Data         : 67.75 GB
+State               : Optimal
+Strip Size          : 64 KB
+Number Of Drives    : 2
+Span Depth          : 1
+Default Cache Policy: WriteBack, ReadAheadNone, Direct, No Write Cache if Bad BBU
+Current Cache Policy: WriteThrough, ReadAheadNone, Cached, No Write Cache if Bad BBU
+Default Access Policy: Read/Write
+Current Access Policy: Read/Write
+Disk Cache Policy   : Disk's Default
+Ongoing Progresses:
+  Reconstruction           : Completed 12%, Taken 4 min.				; mais ça ne saurait tarder....
+Encryption Type     : None
+Is VD Cached: No
+
+Finalement......... : 
+
+megacli -ldinfo L0 -a0
+                                     
+
+Adapter 0 -- Virtual Drive Information:
+Virtual Drive: 0 (Target Id: 0)
+Name                :
+RAID Level          : Primary-5, Secondary-0, RAID Level Qualifier-3			; YYYYEEEESSSSS !!!!!!
+Size                : 135.5 GB
+Parity Size         : 67.75 GB
+State               : Optimal
+Strip Size          : 64 KB
+Number Of Drives    : 3
+Span Depth          : 1
+Default Cache Policy: WriteBack, ReadAheadNone, Direct, No Write Cache if Bad BBU
+Current Cache Policy: WriteBack, ReadAheadNone, Direct, No Write Cache if Bad BBU
+Default Access Policy: Read/Write
+Current Access Policy: Read/Write
+Disk Cache Policy   : Disk's Default
+Ongoing Progresses:
+  Background Initialization: Completed 94%, Taken 10 min.
+Encryption Type     : None
+Is VD Cached: No
+
+
+
