@@ -1,0 +1,4 @@
+[mail filtering]
+
+can be performed by using header_checks : /^To: postmaster@news.seniorplanet.fr/ DISCARD
+can be tested with : postmap -q "bounce@news.seniorplanet.fr" tcp:127.0.0.1:2527

@@ -1,0 +1,7 @@
+[cert-modulus]
+openssl x509 -in alterway_horsprod_certificate.pem -noout -modulus
+
+[key-modulus]
+openssl rsa -in ../alterway_prod_private_2015-2016.key -noout -modulus 
+
+# Verify if you have the same modulus
