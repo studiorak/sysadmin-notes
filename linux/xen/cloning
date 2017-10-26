@@ -1,0 +1,17 @@
+Duplication VM XEN avec LVM
+
+truncate nom_vm --size 6000MB
+losetup /dev/loop1 nom_vm
+pvcreate /dev/loop1
+vgextend VG /dev/loop1
+
+lvconvert --type raid1 --mirrors 1 /dev/VG/disk /dev/loop1
+lvconvert --splitmirrors 1 --name disk_clone /dev/VG/disk
+
+dd etc....
+
+vgreduce VG /dev/loop1
+pvremove /dev/loop1
+
+losetup -d /dev/loop1
+losetup -a
