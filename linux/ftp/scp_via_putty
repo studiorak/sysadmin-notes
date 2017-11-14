@@ -1,0 +1,1 @@
+./pscp.exe -scp -i my.private.key.ppk ../mon/chemin/local/file.txt <USER>@<IP_BASTION>:<IP_TARGET>//mon/chemin/
