@@ -1,0 +1,4 @@
+[tcpdump]
+
+tcpdump -vvvs 1024 -l -A -i eth0 host 10.231.48.21 -w /tmp/diag-datas
+tcpdump -vvvs 1024 -l -A -i eth0 host 10.231.48.21 -r /tmp/diag-datas | less
