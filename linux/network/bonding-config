@@ -19,7 +19,7 @@ NM_CONTROLLED=no
 #/etc/sysconfig/network-scripts/eth0
 DEVICE=eth0
 TYPE=Ethernet
-HWADDR="D8:9D:67:2C:B1:F8"
+HWADDR="D8:9D:67:2C:B1:g5"
 ONBOOT="yes"
 USERCTL=no
 MASTER=bond0
@@ -29,7 +29,7 @@ NM_CONTROLLED=no
 #/etc/sysconfig/network-scripts/eth1
 DEVICE=eth1
 TYPE=Ethernet
-HWADDR="D8:9D:67:2C:B1:F9"
+HWADDR="D8:9D:67:2C:B1:E3"
 ONBOOT=yes
 USERCTL=no
 MASTER=bond0
