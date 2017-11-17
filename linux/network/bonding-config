@@ -1,0 +1,37 @@
+[bonding]
+
+# os : redhat / centos 
+
+# /etc/modprobe.d/bonding.conf
+alias bond0 bonding
+options bond0 mode=1 miimon=100
+
+#/etc/sysconfig/network-scripts/ifcfg-bond0
+DEVICE=bond0
+TYPE=Bond
+IPADDR=10.223.134.46
+NETMASK=255.255.255.0
+GATEWAY="10.223.134.254"
+ONBOOT=yes
+BOOTPROTO=none
+NM_CONTROLLED=no
+
+#/etc/sysconfig/network-scripts/eth0
+DEVICE=eth0
+TYPE=Ethernet
+HWADDR="D8:9D:67:2C:B1:F8"
+ONBOOT="yes"
+USERCTL=no
+MASTER=bond0
+SLAVE=yes
+NM_CONTROLLED=no
+
+#/etc/sysconfig/network-scripts/eth1
+DEVICE=eth1
+TYPE=Ethernet
+HWADDR="D8:9D:67:2C:B1:F9"
+ONBOOT=yes
+USERCTL=no
+MASTER=bond0
+SLAVE=yes
+NM_CONTROLLED=no
