@@ -5,7 +5,7 @@
 src_file=$1
 abs_file=$(readlink -f ${file})
 abs_dir=$(dirname ${file})
-dst_dir="~/backup/$(date +%Y%m%dT%H%M)"/${abs_dir}
+dst_dir="~/backup/$(date +%Y%m%dT%H%M)/${abs_dir}"
 
 mkdir -p ${dst_dir} || echo "could not create ${dst_dir}"
-cp ${abs_file} ${dst_dir}/. 
+cp ${abs_file} ${dst_dir}/. || echo "could not create ${abs_file}"
