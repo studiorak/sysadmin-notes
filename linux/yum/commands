@@ -1,1 +1,1 @@
-subscription-manager register --org=JCDecaux --activationkey=1-centos-x86_64-server-7-dev
+subscription-manager register --org=<mycorp> --activationkey=<my_key>
