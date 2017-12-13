@@ -1,0 +1,14 @@
+LSOF deleted
+
+Quand la rotation de log de squid ou de snmp ne fonctionnent pas correctement, certains fichiers peuvent continuer à occuper de l'espace alors qu'ils ont été déplacé ou supprimé. il est possible de libérer leur espace en faisant un restart du service 
+Si on ne veut pas faire de restart pour éviter une coupure de service on peut lancer la commande suivante, elle permet de tronquer le fichier non libérer: 
+
+: > /proc/$pid/fd/$fd
+
+avec pid le pid du process qui a gardé la main sur le fichier et fd le file descriptor du fichier. 
+ 
+ root@dmrlx203:/etc/cron.daily# lsof | grep -i deleted
+ snmpd      3938   root    3w      REG                8,5     15963                65467 /var/log/snmpd.log.5 (deleted)
+
+on a donc le pid 3938 et le fd 3w, il suffit donc de remplacer les valeurs et de lancer la commande: 
+ : > /proc/3938/fd/3
