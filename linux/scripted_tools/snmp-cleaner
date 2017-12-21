@@ -1,0 +1,158 @@
+#set -o xtrace
+#!/usr/bin/env bash
+
+#{{{ USAGE
+if [[ -z "$@" ]]
+  then
+    echo -e "Usage : $0 <-s server> [-cv] \n -v verbose \n -c clean backup files (by default keep last backup)"
+    exit 0
+fi
+#}}} USAGE
+
+#{{{ INIT
+  # some best practices
+  set -o errexit
+  set -o pipefail
+  set -o nounset
+  MYSSHKEY="/etc/sshgate/data/sshkey.priv.avant_SSHGate-2017"
+  MYSSHOPTS="-oBatchMode=yes -oStrictHostKeyChecking=no"
+  MYSSH="ssh -i ${MYSSHKEY} ${MYSSHOPTS}"
+  ext="_BACK-$(date +%Y%m%dT%H%M)"
+  snmpdir="/etc/snmp/"
+  snmpconfOrig="snmpd.conf"
+  snmpconfBack="$snmpconfOrig$ext"
+  slackwareFile="/etc/slackware-version"
+  rhelFile="/etc/redhat-release"
+
+  # defaults
+  myErrorFlag=false
+  cleanBackup=false
+
+  # optargs params
+  opt=$@
+
+#}}} INIT
+
+#{{{ PARAMS
+  while getopts "cvs:" opt; do
+    case $opt in
+      v)
+        verbose=true
+        set -o xtrace
+        ;;
+      c)
+        cleanBackup=true
+        ;;
+      s)
+        target="$OPTARG"
+        ;;
+      \?)
+        echo "Invalid option: $OPTARG" >&2
+        exit 1
+        ;;
+      :)
+        echo "Option $OPTARG requires an argument." >&2
+        exit 1
+        ;;
+    esac
+  done
+#}}} PARAMS
+
+#{{{ METHODS
+#
+
+  start(){
+    read -n 1 -p "Start with ${target} ? (y,n)" continue
+
+    if [ -n "$continue" ] && [[ "$continue" =~ ^[yY]$ ]]; then
+      echo "Processing ${target}"
+    else
+      echo "Script aborted by user ! Bye !" && exit 0
+    fi
+  }
+
+  defineDistrib(){
+    echo "Start function defineDistrib"
+
+      # define distrib
+      ${MYSSH} ${target} "egrep 'Santiago' ${rhelFile}" > /dev/null 2>&1 && distrib="santiago" || isSantiago=false
+      ${MYSSH} ${target} "egrep 'Maipo' ${rhelFile}" > /dev/null 2>&1 && distrib="maipo" || isMaipo=false
+      ${MYSSH} ${target} "[ -s ${slackwareFile} ]" > /dev/null 2>&1 && distrib="slackware" || isSlackware=false
+      ${MYSSH} ${target} "egrep 'CentOS release 6' ${rhelFile}" > /dev/null 2>&1 && distrib="centos6" || isCentos6=false
+      ${MYSSH} ${target} "egrep 'CentOS Linux release 7' ${rhelFile}" > /dev/null 2>&1 && distrib="centos7" || isCentos7=false
+
+      case $distrib in
+        centos7)
+          RELOADSNMPD='service snmpd reload'
+          ;;
+        centos6)
+          RELOADSNMPD='/etc/rc.d/init.d/snmpd reload'
+          ;;
+        santiago)
+          RELOADSNMPD='/etc/rc.d/init.d/snmpd reload'
+          ;;
+        maipo)
+          RELOADSNMPD='service snmpd reload'
+          ;;
+        slackware)
+          RELOADSNMPD='/etc/rc.d/rc.snmpd restart'
+          ;;
+        *)
+          echo "invalid argument(s)"
+          RELOADSNMPD=''
+          ;;
+      esac
+  }
+
+  backup(){
+    echo "Start function backup"
+
+      # snmpconf file exists
+      ${MYSSH} ${target} "[ -s ${snmpdir}${snmpconfOrig} ]" && echo "[success] - ${snmpdir}${snmpconfOrig} file exists" ||  myErrorFlag=false
+
+      # backup conf
+      ${MYSSH} ${target} "cp ${snmpdir}${snmpconfOrig} ${snmpdir}${snmpconfBack}"
+      ${MYSSH} ${target} "[ -s ${snmpdir}${snmpconfBack} ]" && echo "[success] - ]${snmpdir}${snmpconfBack} backup done" || myErrorFlag=false
+  }
+
+  subStr(){
+    echo "Start function substr"
+
+      doClean(){
+        echo "Start to clean"
+
+          # clean private/public
+          ${MYSSH} ${target} "sed -i $(echo "'")s/\(.*public\|.*private\)/#&/$(echo "'") ${snmpdir}${snmpconfOrig}"
+
+          # hashtag dedup
+          ${MYSSH} ${target} "sed -i $(echo "'")s/##/#/g$(echo "'") ${snmpdir}${snmpconfOrig}"
+      }
+
+      # do substr
+      [ "${myErrorFlag}" == false ] && doClean
+
+      # reload conf
+      [ -n "${RELOADSNMPD}" ] && ${MYSSH} ${target} "${RELOADSNMPD}" && echo "[success] - reload of snmpd" || echo "[ERROR] - Service was not reloaded successfuly"
+
+      # check service state
+      ${MYSSH} ${target} "netstat -tulpn | grep snmp | grep 161 | grep udp" && echo "[success] - Service SNMPD is listening on UDP port 161"
+
+
+  }
+
+  doCleanBackups(){
+    echo "Clean backup files created by this script"
+
+      # find and delete
+      ${MYSSH} ${target} 'cd /etc/snmp/ ; for i in $(ls -1t snmpd.conf_BACK-*T* | tail -n +2) ; do rm -i $i ; done'
+  }
+
+#}}} METHODS
+
+#{{{ BODY
+[ -n "${target}" ] && start
+defineDistrib
+backup
+subStr
+[ "${cleanBackup}" == true ] && doCleanBackups
+#}}} BODY
