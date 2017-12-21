@@ -4,7 +4,8 @@
 #{{{ USAGE
 if [[ -z "$@" ]]
   then
-    echo -e "Usage : $0 <-s server> [-cv] \n -v verbose \n -c clean backup files (by default keep last backup)"
+    echo -e "\n This script is used to add a hashtag '#' at the beginning of each line matching 'private' or 'public' into /etc/snmp/snmpd.conf \n"
+    echo -e "Usage : $0 <-s server> [-cv] \n -s ip or hostname \n -v verbose \n -c clean backup files (by default keep last backup) \n"
     exit 0
 fi
 #}}} USAGE
@@ -14,7 +15,7 @@ fi
   set -o errexit
   set -o pipefail
   set -o nounset
-  MYSSHKEY="/etc/sshgate/data/id_rsa.priv"
+  MYSSHKEY="/root/.ssh/id_rsa.priv"
   MYSSHOPTS="-oBatchMode=yes -oStrictHostKeyChecking=no"
   MYSSH="ssh -i ${MYSSHKEY} ${MYSSHOPTS}"
   ext="_BACK-$(date +%Y%m%dT%H%M)"
@@ -60,14 +61,14 @@ fi
 
 #{{{ METHODS
 #
-
+  # prompt for server processing
   start(){
     read -n 1 -p "Start with ${target} ? (y,n)" continue
 
     if [ -n "$continue" ] && [[ "$continue" =~ ^[yY]$ ]]; then
-      echo "Processing ${target}"
+      echo -e "\n Processing ${target}"
     else
-      echo "Script aborted by user ! Bye !" && exit 0
+      echo -e "\n Script aborted by user ! Bye !" && exit 0
     fi
   }
 
@@ -81,18 +82,19 @@ fi
       ${MYSSH} ${target} "egrep 'CentOS release 6' ${rhelFile}" > /dev/null 2>&1 && distrib="centos6" || isCentos6=false
       ${MYSSH} ${target} "egrep 'CentOS Linux release 7' ${rhelFile}" > /dev/null 2>&1 && distrib="centos7" || isCentos7=false
 
+      # define reload command according to distrib
       case $distrib in
         centos7)
-          RELOADSNMPD='service snmpd reload'
+          RELOADSNMPD='service snmpd restart'
           ;;
         centos6)
-          RELOADSNMPD='/etc/rc.d/init.d/snmpd reload'
+          RELOADSNMPD='/etc/rc.d/init.d/snmpd restart'
           ;;
         santiago)
-          RELOADSNMPD='/etc/rc.d/init.d/snmpd reload'
+          RELOADSNMPD='/etc/rc.d/init.d/snmpd restart'
           ;;
         maipo)
-          RELOADSNMPD='service snmpd reload'
+          RELOADSNMPD='service snmpd restart'
           ;;
         slackware)
           RELOADSNMPD='/etc/rc.d/rc.snmpd restart'
@@ -110,7 +112,7 @@ fi
       # snmpconf file exists
       ${MYSSH} ${target} "[ -s ${snmpdir}${snmpconfOrig} ]" && echo "[success] - ${snmpdir}${snmpconfOrig} file exists" ||  myErrorFlag=false
 
-      # backup conf
+      # do backup conf
       ${MYSSH} ${target} "cp ${snmpdir}${snmpconfOrig} ${snmpdir}${snmpconfBack}"
       ${MYSSH} ${target} "[ -s ${snmpdir}${snmpconfBack} ]" && echo "[success] - ]${snmpdir}${snmpconfBack} backup done" || myErrorFlag=false
   }
@@ -121,11 +123,8 @@ fi
       doClean(){
         echo "Start to clean"
 
-          # clean private/public
-          ${MYSSH} ${target} "sed -i $(echo "'")s/\(.*public\|.*private\)/#&/$(echo "'") ${snmpdir}${snmpconfOrig}"
-
-          # hashtag dedup
-          ${MYSSH} ${target} "sed -i $(echo "'")s/##/#/g$(echo "'") ${snmpdir}${snmpconfOrig}"
+          # clean private/public from conf (exclude already commented lines)
+          ${MYSSH} ${target} "sed -i $(echo "'")s/^[^!#]\(.*public\|.*private\)/#&/$(echo "'") ${snmpdir}${snmpconfOrig}"
       }
 
       # do substr
@@ -143,7 +142,7 @@ fi
   doCleanBackups(){
     echo "Clean backup files created by this script"
 
-      # find and delete
+      # function : find and delete
       ${MYSSH} ${target} 'cd /etc/snmp/ ; for i in $(ls -1t snmpd.conf_BACK-*T* | tail -n +2) ; do rm -i $i ; done'
   }
 
