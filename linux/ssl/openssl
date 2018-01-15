@@ -8,3 +8,14 @@ openssl rsa -in ../alterway_prod_private_2015-2016.key -noout -modulus
 
 [ssl-check]
 openssl s_client -showcerts -connect www.scope.extranet.sf.intra.laposte.fr:443
+
+
+[add-ca]
+mv /tmp/JCDecauxServerSHA256CA.chain /etc/pki/ca-trust/source/anchors/.
+cd /etc/pki/ca-trust/source/anchors/
+update-ca-trust enable
+cd /etc/pki/ca-trust/source/anchors/
+update-ca-trust extract
+find /etc/pki/ -mtime -1 -print
+find /etc/pki/ -mtime -1 -name "*.pem" -print
+find /etc/pki/ -mtime -1 -name "*.pem" -exec ls -lash {} \;
