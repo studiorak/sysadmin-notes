@@ -11,7 +11,7 @@ openssl s_client -showcerts -connect www.scope.extranet.sf.intra.laposte.fr:443
 
 
 [add-ca]
-mv /tmp/JCDecauxServerSHA256CA.chain /etc/pki/ca-trust/source/anchors/.
+mv /tmp/monfichier.chain /etc/pki/ca-trust/source/anchors/.
 cd /etc/pki/ca-trust/source/anchors/
 update-ca-trust enable
 cd /etc/pki/ca-trust/source/anchors/
