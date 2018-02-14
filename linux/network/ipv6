@@ -1,0 +1,23 @@
+#1
+[root@lx2192 ~]# cat /etc/modprobe.d/ipv6.conf
+options ipv6 disable=1
+Solution => echo "options ipv6 disable=1" > /etc/modprobe.d/ipv6.conf
+
+#2
+[root@lx5437 ~]# sysctl -e -a | grep ipv6 | grep disable
+net.ipv6.conf.all.disable_ipv6 = 0
+net.ipv6.conf.default.disable_ipv6 = 0
+net.ipv6.conf.eth0.disable_ipv6 = 0
+net.ipv6.conf.lo.disable_ipv6 = 0
+Solution => sysctl -w net.ipv6.conf.all.disable_ipv6=0
+
+#3
+[root@lx5437 ~]# cat /etc/default/grub
+GRUB_TIMEOUT=30
+GRUB_DEFAULT=saved
+GRUB_DISABLE_SUBMENU=true
+GRUB_TERMINAL_OUTPUT="console"
+GRUB_CMDLINE_LINUX="rd.lvm.lv=rhel/swap crashkernel=auto rd.lvm.lv=rhel/root rhgb quiet console=ttyS0"
+GRUB_DISABLE_RECOVERY="true"
+Solution => sed 's/GRUB_CMDLINE_LINUX="/GRUB_CMDLINE_LINUX="ipv6.disable=1 /'
+
