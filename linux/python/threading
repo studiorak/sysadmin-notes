@@ -20,10 +20,11 @@ def do_stuff(thread_id):
         print(q.get())
         q.task_done()
 
-#create threads
+#create threads as waiting deamons
 for i in range(num_threads):
   worker = Thread(target=do_stuff, args=(i,))
   worker.setDaemon(True)
   worker.start()
 
+#Blocks until all items in the queue have been gotten and processed.
 q.join()
