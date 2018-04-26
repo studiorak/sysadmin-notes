@@ -1,0 +1,28 @@
+#!/bin/python3
+
+import queue
+from threading import Thread
+
+#create empty queue
+q = queue.Queue()
+
+#fill the queue
+for i in range(1000000):
+    q.put(i)
+
+#set thread num
+num_threads = 4
+
+#task to do (here just print)
+def do_stuff(num):
+    while True:
+        print(q.get())
+        q.task_done()
+
+#create threads
+for i in range(num_threads):
+  worker = Thread(target=do_stuff, args=(q,))
+  worker.setDaemon(True)
+  worker.start()
+
+q.join()
