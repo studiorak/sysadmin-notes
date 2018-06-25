@@ -2,13 +2,50 @@
 
 import queue
 from threading import Thread
+from optparse import OptionParser
 
-#empty queue
+parser = OptionParser()
+parser.add_option("-i", "--input-dir", dest="dir", help="input directory")
+(options, args) = parser.parse_args()
+
+
+##### INIT VARIABLES #####
+# target directory
+input = options.dir
+# empty queue
 q = queue.Queue()
 
-#fill the queue
-for i in range(100000):
-    q.put(i)
+# check mandatory parameters
+try:
+    assert input
+except AssertionError:
+    print("usage: url_checker.py -i <diretory>")
+    exit(1)
+
+# checks on file
+try:
+    openfile = open(input,"r")
+except FileNotFoundError:
+    print("file" + input + "doesn't exists")
+
+# parse csv file to fill the queue "q"
+for line in openfile:
+    # split lines to list
+    spLine = line.strip().split(";")
+
+    # feed queue with new line
+    q.put(spLine)
+
+    # check range
+    try:
+        # check number of elem/line
+        assert spLine[10]
+        # fill the queue
+        q.put(i)
+    except AssertionError:
+        print("Out of range")
+    except NameError:
+        print("Variable is not set")
 
 #set thread num
 num_threads = 8
@@ -16,15 +53,18 @@ num_threads = 8
 #task to do
 def do_stuff(thread_id):
     while True:
-        print(thread_id)
-        print(q.get())
+        # pick a line from queue
+        qLine = q.get()
+        # do stuff
+        print(qLine)
+        # notify the queue action is over
         q.task_done()
 
 #create threads as waiting deamons
 for i in range(num_threads):
-  worker = Thread(target=do_stuff, args=(i,))
-  worker.setDaemon(True)
-  worker.start()
+    worker = Thread(target=do_stuff, args=(i,))
+    worker.setDaemon(True)
+    worker.start()
 
 #Blocks until all items in the queue have been gotten and processed.
 q.join()
