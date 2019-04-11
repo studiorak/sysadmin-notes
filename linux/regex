@@ -1,3 +1,6 @@
 ascii:
   match:
     - url: grep "Acces" /home/nexen/backup/20170209_1048/etc/keepalived/keepalived.conf | egrep -o --color "[a-zA-Z0-9_-\.]+[\.](com|fr|net|org)"
+
+
+https://github.com/kkos/oniguruma/blob/master/doc/RE
