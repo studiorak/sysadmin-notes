@@ -1,0 +1,101 @@
+Adddisk
+Sommaire
+1 VMWARE
+2 AWS,EC2,ELASTIC BLOCK STORE,Volumes
+3 extande EC2 volume
+4 Reduction de FS
+VMWARE
+S'assurer que le disque ne soit pas partitionné 
+ex : pour /dev/sda vérifier l'existence d'un /dev/sda1 ou /dev/sdax
+ fdisk -l 
+Augmenter la taille du disque sur vmware
+
+ GUI 
+Faire un rescan :
+
+ echo 1>/sys/block/sde/device/rescan 
+resize le PV :
+
+ pvresize /dev/sdx 
+checker l'augmentation du VG
+
+ vgs  
+extend le LV
+
+ lvextend -l +100%FREE /dev/mapper/lvg3-lvtmp1 
+reformer la partition système
+
+ resize2fs /dev/mapper/lvg3-lvtmp1
+ ou
+ xfs_growfs /dev/mapper/lvg3-lvtmp1  
+vérifier
+
+ df -h 
+AWS,EC2,ELASTIC BLOCK STORE,Volumes
+create volume:size & zone
+action,attache volume
+rescan scsi bus (vmware)
+ grep mpt /sys/class/scsi_host/host?/proc_name
+ /sys/class/scsi_host/host2/proc_name:mptspi
+ echo "- - -" > /sys/class/scsi_host/host2/scan
+ssh ip
+ fdisk -l
+ fdisk /dev/xvdf
+ p n(p,1,CR,CR) t(8e) p w
+ pvcreate /dev/xvdf1
+ pvdisplay 
+ vgcreate  vg01 /dev/xvdf1
+ vgextend  vg01 /dev/xvdf1
+ vgdisplay 
+ou sans partition
+
+ pvcreate /dev/xvdf
+ vgcreate  vgaws1 /dev/xvdf
+ vgextend  vg01 /dev/xvdf
+ vgextend  rhel /dev/xvdf
+resize (choose one)
+ lvextend -rl +100%FREE /dev/mapper/vg01-var_lib
+ lvextend -rL +10G /dev/mapper/vg01-var_lib
+ lvextend -rL  20G /dev/mapper/vg01-var_lib
+create new one
+ lvcreate -n var_lib -L  10G vg01
+ mkfs.ext4 /dev/mapper/vg01-var_lib
+mount fs
+ mkdir /mount_point
+ vim /etc/fstab
+  /dev/mapper/vg01-var_lib /var/lib ext4 defaults 0 0
+ mount -a
+extande EC2 volume
+allez dans la console amazone
+https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1
+sélectionnez l'instance ec2
+sélectionnez le volume à étandre (df -h;vgdisplay)
+dans la nouvelle fenêtres (celle des volumes)
+https://eu-west-1.console.aws.amazon.com/ec2/v2/home?region=eu-west-1#Volumes:search=vol-0a14724d2e20a69ca
+[Action][Modifier]+changez le nombres de Go+[ok]
+dans le ssh
+pvdisplay /dev/xvdg # ancienne taille
+pvresize /dev/xvdg
+pvdisplay /dev/xvdg # nouvelle taille
+vgdisplay rhel
+lvextend -rl +100%FREE /dev/mapper/rhel-app1
+df -h
+Reduction de FS
+Unmount the filesystem and check its' LV
+ umount /mnt/foo
+ e2fsck -f /dev/mapper/vg0-foo
+
+Shrink ext4 and then the LV to the desired size
+ resize2fs -p /dev/mapper/vg0-foo 40G
+ lvreduce -L 40G /dev/mapper/vg0-foo
+
+Before continuing, run e2fsck. If it bails because the partition
+is too small, don't panic! The LV can still be extended with lvextend until e2fsck succeeds, e.g.:
+
+ lvextend -L +1G /dev/mapper/vg0-foo
+ e2fsck -f /dev/mapper/vg0-foo
+
+Resize the filesystem to match the LVs size, check and mount it
+ resize2fs -p /dev/mapper/vg0-foo
+ e2fsck -f /dev/mapper/vg0-foo
+ mount /mnt/foo
