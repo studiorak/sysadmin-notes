@@ -1,0 +1,23 @@
+Useful commands
+Edit
+View context :
+kubectl config get-contexts
+
+Use context:
+kubectl config use-context k-two-npr
+
+View configuration :
+ kubectl config view 
+
+View namespaces :
+ kubectl get ns 
+
+View pods :
+ kubectl get pods -n <namespace> 
+
+connect to a container :
+ kubectl exec -it thor-gui-67867db46d-xpnxh -n infra-thor-staging -- /bin/sh 
+
+Busybox :
+ kubectl run -i --tty busybox --image=busybox --restart=Never -- sh 
+ 
