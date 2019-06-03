@@ -1,0 +1,10 @@
+uptime              => load avg
+dmesg -T | tail     => kernel errors 
+vmstat 1            => overall stats by time 
+mpstat -P ALL 1     => CPU balance
+pidstat 1           => processus usage 
+iostat -xz 1        => disk I/O
+free -m             => memory usage
+sar -n DEV 1        => network I/O
+sar -n TCP, ETCP 1  => tcp stats 
+top                 => check overview
