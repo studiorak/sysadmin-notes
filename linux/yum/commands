@@ -1,1 +1,11 @@
+# register 
 subscription-manager register --org=<mycorp> --activationkey=<my_key>
+
+# list avail repos 
+subscription-manager list --available
+
+# attach repos 
+subscription-manager attach --pool 8a6780ec66a6103201677a433c652987
+
+# refresh repolist 
+yum repolist
