@@ -1,1 +1,15 @@
 
+Trouver le fs-full
+# df -g 
+
+Trouver le PV non alloué à un VG
+# lspv
+
+Trouver le VG a extend 
+# lsvg
+
+Ajouter de la volumétrie à un VG
+# extendvg VGNAME PVNAME
+
+Resie le LV
+chfs -a size=+30G  /mon/fs
