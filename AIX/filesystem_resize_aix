@@ -11,5 +11,5 @@ Trouver le VG a extend
 Ajouter de la volumétrie à un VG
 # extendvg VGNAME PVNAME
 
-Resie le LV
+Resize le LV
 chfs -a size=+30G  /mon/fs
