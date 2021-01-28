@@ -1,0 +1,23 @@
+
+## afficher les lun et chemin multipath : 
+multipath -ll
+
+## pour afficher les stats de lécture / ecriture sur les disques:
+## pour trouver les chemins utilisés si multipath:
+iostat 
+watch 'iostat | egrep "(sdk|sdby|sdy|sdci)"'
+
+## pour effectuer un  scan scsi : 
+ for scsi in `ls /sys/class/scsi_host/`;do echo "- - -" > /sys/class/scsi_host/$scsi/scan;done
+ou
+ rescan-scsi-bus.sh
+
+########
+## pour supprimer un chemin multipath dans le cas d'une suppression d'un chemin : 
+repérer le nom du device puis : 
+echo 1 > /sys/block/sdk/device/delete
+
+# boucle pour effectuer l'action sur plusieurs device : 
+for device in $(multipath -ll | grep failed | awk '{print $3}');do echo 1 > /sys/block/$device/device/delete ;done
+for device in $(multipath -ll | grep failed | awk '{print $3}');do echo "echo 1 > /sys/block/$device/device/delete" ;done
+########
