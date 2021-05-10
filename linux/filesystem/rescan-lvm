@@ -1,36 +1,37 @@
-Adddisk
-Sommaire
-1 VMWARE
-2 AWS,EC2,ELASTIC BLOCK STORE,Volumes
-3 extande EC2 volume
-4 Reduction de FS
-VMWARE
+Cette note a pour but de référencer les commandes à connaitre sur les filesystem Linux sur :
+-  VMWARE
+-  AWS,EC2,ELASTIC BLOCK STORE,Volumes
+-  extande EC2 volume
+-  Reduction de FS
+
+[VMWARE]
 S'assurer que le disque ne soit pas partitionné 
 ex : pour /dev/sda vérifier l'existence d'un /dev/sda1 ou /dev/sdax
  fdisk -l 
-Augmenter la taille du disque sur vmware
 
- GUI 
-Faire un rescan :
+CAS 1 : Si pas de partition /dev/sda1, 2 3... extend de disque 
+CAS 2 : si disque partitionné : ajout d'un disque non partitionné au VG.
 
- echo 1>/sys/block/sde/device/rescan 
-resize le PV :
+Faire un rescan en CLI : echo 1>/sys/block/sde/device/rescan 
 
+puis resize le PV :
  pvresize /dev/sdx 
-checker l'augmentation du VG
 
+Puis checker l'augmentation du VG
  vgs  
-extend le LV
 
- lvextend -l +100%FREE /dev/mapper/lvg3-lvtmp1 
+Puis extend le LV
+ lvextend -r -l +100%FREE /dev/mapper/lvg3-lvtmp1 
 reformer la partition système
 
+Puis mettre à jour la table de partition 
  resize2fs /dev/mapper/lvg3-lvtmp1
  ou
  xfs_growfs /dev/mapper/lvg3-lvtmp1  
-vérifier
 
+vérifier
  df -h 
+
 AWS,EC2,ELASTIC BLOCK STORE,Volumes
 create volume:size & zone
 action,attache volume
