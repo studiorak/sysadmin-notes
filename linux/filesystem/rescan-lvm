@@ -43,7 +43,7 @@ rescan scsi bus (vmware)
  
  
  
- for i in $(ls -1 /sys/class/scsi_host/) ; do echo "- - -" > /sys/class/scsi_host/host${i}/scan ; done 
+ for i in $(ls -1 /sys/class/scsi_host/) ; do echo "- - -" > /sys/class/scsi_host/${i}/scan ; done 
  
  
  
