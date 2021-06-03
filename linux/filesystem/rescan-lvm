@@ -38,7 +38,18 @@ action,attache volume
 rescan scsi bus (vmware)
  grep mpt /sys/class/scsi_host/host?/proc_name
  /sys/class/scsi_host/host2/proc_name:mptspi
- echo "- - -" > /sys/class/scsi_host/host2/scan
+ 
+ 
+ 
+ 
+ 
+ for i in $(ls -1 /sys/class/scsi_host/) ; do echo "- - -" > /sys/class/scsi_host/host${i}/scan ; done 
+ 
+ 
+ 
+ 
+ 
+ 
 ssh ip
  fdisk -l
  fdisk /dev/xvdf
