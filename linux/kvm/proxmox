@@ -1,2 +1,6 @@
 #find hypervisor 
 lldpctl
+
+
+# network conf 
+https://www.cyberciti.biz/faq/linux-ip-command-examples-usage-syntax/
