@@ -10,7 +10,9 @@ openssl rsa -in ../alterway_prod_private_2015-2016.key -noout -modulus
 openssl s_client -showcerts -connect www.scope.extranet.sf.intra.laposte.fr:443
 
 
-[add-ca]
+
+
+[add-ca] - SOLUTION 1 => KO parfois => go to solution 2
 mv /tmp/monfichier.chain /etc/pki/ca-trust/source/anchors/.
 cd /etc/pki/ca-trust/source/anchors/
 update-ca-trust enable
@@ -19,3 +21,15 @@ update-ca-trust extract
 find /etc/pki/ -mtime -1 -print
 find /etc/pki/ -mtime -1 -name "*.pem" -print
 find /etc/pki/ -mtime -1 -name "*.pem" -exec ls -lash {} \;
+
+
+
+[add-ca] - SOLUTION 2 - validé !
+Put the SSL certificate (including the "-----BEGIN CERTIFICATE-----" and "-----END CERTIFICATE-----" lines) into a file in the directory "/etc/pki/tls/certs" - for the sake of example, let's call it "myserver.pem".
+Compute the certificate hash of this certificate by running
+openssl x509 -noout -hash -in /etc/pki/tls/certs/myserver.pem
+for the sake of example, let's assume the hash value is "1a2b3c4d".
+Make a symbolic link in the certs directory based on this hash value, like this:
+ln -s /etc/pki/tls/certs/myserver.pem /etc/pki/tls/certs/1a2b3c4d.0
+I'm assuming that there are no other certificates already in this directory that hash to the same hash value - if there already is a "1a2b3c4d.0", then make your link "1a2b3c4d.1" instead (or if there's already a ".1", make yours ".2", etc...)
+wget and other tools that use SSL will then recognize that certificate as valid. There may be a simpler way to do this using a GUI but works to do it via the command line.
