@@ -1,0 +1,14 @@
+https://support.kaspersky.com/fr/15598#block1
+
+Comment créer les fichiers de traces dans Kaspersky Endpoint Security for Linux
+Pour créer les fichiers de traces de Kaspersky Endpoint Security for Linux :
+
+Créez le répertoire log/kaspersky. Si le répertoire existe déjà, videz-le :
+rm -rf /var/log/kaspersky/*/*.log
+Définissez le niveau détaillé du traçage :
+kesl-control --set-app-settings TraceLevel=Detailed 
+Reproduisez le problème. 
+Restaurez le niveau par défaut du traçage.
+kesl-control --set-app-settings TraceLevel=None
+Collectez les informations de diagnostic de base dans un rapport à l'aide du script collect.sh. Pour les instructions, consultez cet article.
+Le fichier de traces sera créé à l'emplacement /tmp/*-collect.tar.gz
