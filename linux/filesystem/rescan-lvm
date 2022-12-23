@@ -21,9 +21,11 @@ Puis checker l'augmentation du VG
  vgs  
 
 Puis extend le LV
- lvextend -r -l +100%FREE /dev/mapper/lvg3-lvtmp1 
+  Valeure relative : lvextend -r -l+100%FREE /dev/mapper/lvg3-lvtmp1 
+  valeure absolue : lvextend -r -L+5G /dev/mapper/lvg3-lvtmp1 
 reformer la partition système
 
+Si tu oublies le paramètre "-r" :
 Puis mettre à jour la table de partition 
  resize2fs /dev/mapper/lvg3-lvtmp1
  ou
