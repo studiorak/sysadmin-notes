@@ -1,17 +1,17 @@
 Voici ma procédure : 
 
 CLIENT 1
-[at001036@tgsdc1apgmng01p ~]$ echo $$
+ echo $$
 2109577
 
 CLIENT 2
-[at001036@tgsdc1apgmng01p ~]$ pkttyagent --process 2109577
+pkttyagent --process 2109577
 
 CLIENT 1
 pkexec su 
 
 CLIENT 2
-password for the user localadm
+password for the admin user 
 
 CLIENT 1
 Be root user !!!
