@@ -1,0 +1,163 @@
+create — Ceph Documentation
+
+# création d'un osd 
+ceph-volume lvm create --data /dev/sde
+
+
+# ajout de PG (placement group)
+https://docs.ceph.com/en/mimic/rados/operations/placement-groups/
+
+
+# FAQ recovery ceeph 
+
+Ceph - Diagnostic - HEALTH_ERR - X full OSD
+Créée par Yanis LISIMA, dernière modification par Sylvaire-Kevin TIPA le 14 févr., 2019
+Objectif :
+Diagnostic détaillée sur  le cas d'erreur HEALTH_ERR X full OSD
+
+Doc officielle : https://access.redhat.com/documentation/en-us/red_hat_ceph_storage/2/html/troubleshooting_guide/
+
+Menu :
+
+Objectif :
+pré-requis :
+Versions testées :
+Procédure
+Solution 1 : Un OSD full, suppression de données
+Solution 2 : Ajout de noeud dans le cluster
+Solution 3: Déplacement des placements group
+Solution 4 : Un OSD Full mais le cluster n'accepte plus d'opérations (suppression de données)
+Contrôle :
+English version :
+
+
+
+
+pré-requis :
+Avoir suivi la page générale de diagnostique : MULTICLIENT - ADD - AFS - Ceph : Diagnostic
+DRAFT
+
+Versions testées :
+10.2.0.1
+12.X
+Procédure
+Il y a plusieurs solutions en fonction de votre situation. Si vous avez la possibilité d'ajouter un noeud au cluster allez directement à la dernière solution de la procédure.
+
+Solution 1 : Un OSD full, suppression de données
+Cette solution vous concerne si vous remplissez les conditions suivantes:
+
+Tous les OSD du cluster sont UP
+La commande ceph -s indique un seul OSD full
+La commande ceph df indique que moins de 90% de la capacité brute est utilisée
+Vous avez la possibilité de supprimer des données
+
+
+Identifier le noeud qui possède le disque plein
+
+Depuis un manager lancer la commande suivante
+
+ceph health detail
+L'indice de l'OSD plein sera indiqué par un retour de type osd.3 is full
+Lancer la commande suivante
+
+ceph osd tree
+Reporter vous au retour de la commande afin de trouver quel noeud possède l'indique retourné de la commande (1.)
+État OK, rien à faire.
+Arrêter le daemon ceph-osd du noeud plein
+
+Connectez vous au noeud de l'étape précédente
+Arrétez le daemon ceph-osd correspondant
+
+sudo systemctl stop ceph-osd@<indice>.service
+Vérifiez le status du daemon
+
+sudo systemctl status ceph-osd@<indice>.service
+
+Vérifiez l'état du cluster
+
+Relancez la commande ceph -s
+Il doit y avoir un OSD down, c'est celui que nous avons arrêté
+Ceph indique une dégradation des données, c'est normal, notez le pourcentage
+Vérifez l'utilisation disque ceph df
+Aucun des pools ne doit être à plus de 90%
+Relancez la commande ceph -s et vérifiez que le pourcentage de dégradation des données a baissé
+
+Supprimez les données purgeables	
+Relancez le daemon ceph-osd du noeud plein
+
+Lancer la commande ceph df
+Vérifiez que l'utilisation est réduite suffisamment, sinon attendez
+Connectez vous au noeud de l'étape 1.
+Lancer le daemon ceph
+
+sudo systemctl start ceph-osd@<indice>.service
+Vérifiez le status
+
+sudo systemctl status ceph-osd@<indice>.service
+
+Attendre la remise en état du cluster
+
+Si tout s'est bien déroulé Ceph supprimera les copies des données supprimées sur le cluster, vérifiez l'état régulièrement avec les commandes de disgnostiques.
+
+
+Solution 2 : Ajout de noeud dans le cluster
+Ajoutez un noeud à l'inventaire et lancer le playbook de l'AF
+
+Solution 3: Déplacement des placements group
+Solution encore à étudier, cette solution empêche les nouveaux client avec un kernel inférieur à 4.5 à se connecter au cluster
+
+
+
+Vérifier la répartition des groupes de placement
+
+echo "nb_pg_total $(ceph pg ls | wc -l)"; for id in $(ceph osd ls); do echo "osd.$id $(ceph pg ls-by-osd osd.$id | wc -l)" ; done
+Exemple de retour
+
+nb_pg_total 193
+osd.0 78
+osd.1 74
+osd.2 85
+osd.3 71
+osd.4 81
+
+Lancer une répartition automatique des groupes
+
+Suivre le lien suivant: https://docs.ceph.com/docs/mimic/rados/operations/upmap/
+
+
+Attendre que l'alerte "osd full" disparaisse de ceph -s	
+Attendre que l'alerte "objects misplaced" disparaisse de ceph -s	
+Solution 4 : Un OSD Full mais le cluster n'accepte plus d'opérations (suppression de données)
+1	
+Se connecter sur un manager et lancer cette commande :
+
+ceph osd df
+et relever l'ID de l'OSD le plus rempli
+
+
+2	
+Faire sortir l'OSD en question du cluster et arrêter le daemon Ceph-OSD :
+
+ceph osd out <ID relevé précédemment>
+systemctl stop ceph-osd@<ID>
+
+3	Se connecter en SSH à la machine qui héberge l'OSD arrêté et supprimer des données stockées sur /data/ceph (des backups par exemple)	
+4	
+Remettre l'OSD dans le cluster
+
+systemctl start ceph-osd@<ID>
+ceph osd in
+
+5	
+Modifier temporairement la configuration de Ceph pour accélérer le recovery des données
+
+ceph tell 'osd.*' config set osd_recovery_sleep_hdd 0
+Commande supplémentaire, à ne faire que si vous savez ce que vous faite :
+
+ceph tell 'osd.*' injectargs '--osd-max-backfills 16'
+ceph tell 'osd.*' injectargs '--osd-recovery-max-active 4'
+7	
+Une fois le cluster en état OK, remettre la configuration par défaut
+
+ceph tell 'osd.*' config set osd_recovery_sleep_hdd 1
+
