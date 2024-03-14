@@ -8,6 +8,13 @@ ceph-volume lvm create --data /dev/sde
 https://docs.ceph.com/en/mimic/rados/operations/placement-groups/
 
 
+# disable performance check while osd rebuilds 
+1 = activate
+0 = deactivate
+ceph tell 'osd.*' config set osd_recovery_sleep_hdd 1 
+
+
+
 # FAQ recovery ceeph 
 
 Ceph - Diagnostic - HEALTH_ERR - X full OSD
