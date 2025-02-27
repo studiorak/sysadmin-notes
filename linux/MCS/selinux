@@ -1,0 +1,33 @@
+dac
+
+mac
+  unconfined_u:		object_r:		http_sys_content_t:		sO 			/var/www/html
+  User				Role			Type					Level		File
+  
+MCS: multi category security
+MLS: multi level security
+
+# get selinux state 
+ls -latrdZ myfile.txt
+
+# get selinux process state 
+ps fauxZ 
+
+
+# semanage login -l
+Login Name           SELinux User         MLS/MCS Range        Service
+__default__          unconfined_u         s0-s0:c0.c1023       *
+root                 unconfined_u         s0-s0:c0.c1023       *
+system_u             system_u             s0-s0:c0.c1023       *
+
+# temporary change context 
+chcon -R -t http_sys_conteent_t /var/lol/
+
+# permanently add context to a file/dir (/etc/selinux/targeted/files/...
+semanage fcontext -a -t httpd_sys_content_t /web
+
+# apply permanent rule from /etc/selinux/targeted/files/...
+restorecon -v /web
+
+# list booleans 
+semanage boolean -l 
